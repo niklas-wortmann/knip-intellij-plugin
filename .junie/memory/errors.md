@@ -18,3 +18,13 @@
     "NEW INSTRUCTION": "WHEN npx stderr contains \"could not determine executable to run\" THEN start server via Node.js using resolved package bin path"
 }
 
+[2026-01-06 15:10] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid API usage",
+    "TOOL": "gradle compileKotlin",
+    "ERROR": "Method override signature mismatch in LSPCodeActionFeature",
+    "ROOT CAUSE": "The overridden isSupported method did not match the LSP4IJ 0.11.0 API signature.",
+    "PROJECT NOTE": "This project uses lsp4ij 0.11.0 (gradle.properties platformPlugins); verify method signatures against that version’s compiled classes.",
+    "NEW INSTRUCTION": "WHEN Kotlin shows 'overrides nothing' on an API override THEN check library version and match exact method signature"
+}
+
