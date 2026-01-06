@@ -20,7 +20,7 @@ class KnipSettingsTest : BasePlatformTestCase() {
         // Verify default values
         assertTrue("Plugin should be enabled by default", settings.enabled)
         assertEquals("Node path should be empty by default", "", settings.nodePath)
-        assertEquals("Npx path should be empty by default", "", settings.npxPath)
+        assertEquals("Language server path should be empty by default", "", settings.languageServerPath)
         assertEquals("Server arguments should default to --stdio", "--stdio", settings.serverArguments)
     }
 
@@ -30,13 +30,13 @@ class KnipSettingsTest : BasePlatformTestCase() {
         // Modify settings
         settings.enabled = false
         settings.nodePath = "/custom/node"
-        settings.npxPath = "/custom/npx"
+        settings.languageServerPath = "/custom/language-server/src/index.js"
         settings.serverArguments = "--stdio --verbose"
         
         // Verify modifications
         assertFalse("Plugin should be disabled", settings.enabled)
         assertEquals("/custom/node", settings.nodePath)
-        assertEquals("/custom/npx", settings.npxPath)
+        assertEquals("/custom/language-server/src/index.js", settings.languageServerPath)
         assertEquals("--stdio --verbose", settings.serverArguments)
     }
 
@@ -57,7 +57,7 @@ class KnipSettingsTest : BasePlatformTestCase() {
         val newState = KnipSettings.State(
             enabled = false,
             nodePath = "/loaded/node",
-            npxPath = "/loaded/npx",
+            languageServerPath = "/loaded/language-server/src/index.js",
             serverArguments = "--custom-arg"
         )
         
@@ -65,7 +65,7 @@ class KnipSettingsTest : BasePlatformTestCase() {
         
         assertFalse("Loaded enabled should be false", settings.enabled)
         assertEquals("/loaded/node", settings.nodePath)
-        assertEquals("/loaded/npx", settings.npxPath)
+        assertEquals("/loaded/language-server/src/index.js", settings.languageServerPath)
         assertEquals("--custom-arg", settings.serverArguments)
     }
 }

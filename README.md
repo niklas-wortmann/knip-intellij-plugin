@@ -26,7 +26,7 @@ Knip helps you keep your codebase clean and maintainable by identifying dead cod
 ## Requirements
 
 - **Node.js** (v18 or later recommended)
-- **npm/npx** available in your PATH
+- **@knip/language-server** installed globally (`npm install -g @knip/language-server`)
 - A JetBrains IDE (IntelliJ IDEA, WebStorm, PhpStorm, etc.)
 
 ## Installation
@@ -56,7 +56,7 @@ Configure the plugin at <kbd>Settings/Preferences</kbd> > <kbd>Tools</kbd> > <kb
 |---------|-------------|
 | **Enable Knip** | Toggle the language server on/off |
 | **Node.js path** | Custom path to Node.js executable (leave empty to use system PATH) |
-| **npx path** | Custom path to npx executable (leave empty to auto-detect) |
+| **Language server path** | Custom path to @knip/language-server entry point (leave empty to auto-detect) |
 | **Server arguments** | Arguments passed to the language server (default: `--stdio`) |
 
 ### Project Configuration
@@ -105,10 +105,19 @@ If you need to restart the language server:
 
 ### Language server not starting
 
-1. Ensure Node.js is installed and available in your PATH
-2. Try running `npx @knip/language-server --version` in your terminal
-3. Check the IDE log for errors: <kbd>Help</kbd> > <kbd>Show Log in Finder/Explorer</kbd>
-4. Configure a custom Node.js/npx path in settings if auto-detection fails
+1. Ensure Node.js (v18+) is installed and available in your PATH
+2. Install the language server globally: `npm install -g @knip/language-server`
+3. Verify installation by checking the package exists in your global node_modules
+4. Check the IDE log for errors: <kbd>Help</kbd> > <kbd>Show Log in Finder/Explorer</kbd>
+5. If auto-detection fails, configure a custom path in settings pointing to the `src/index.js` file of the installed package
+
+### Common installation locations
+
+The plugin auto-detects the language server in these locations:
+- **Local**: `<project>/node_modules/@knip/language-server/src/index.js`
+- **Volta**: `~/.volta/tools/image/packages/@knip/language-server/lib/node_modules/@knip/language-server/src/index.js`
+- **npm global**: `/usr/local/lib/node_modules/@knip/language-server/src/index.js`
+- **nvm**: `~/.nvm/versions/node/<version>/lib/node_modules/@knip/language-server/src/index.js`
 
 ### No diagnostics appearing
 

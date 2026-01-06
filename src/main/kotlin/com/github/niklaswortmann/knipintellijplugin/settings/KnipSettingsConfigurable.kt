@@ -34,13 +34,13 @@ class KnipSettingsConfigurable(private val project: Project) : BoundConfigurable
                 ).bindText(settings::nodePath)
                     .comment("Leave empty to use system PATH")
             }
-            row("npx path:") {
+            row("Language server path:") {
                 textFieldWithBrowseButton(
                     FileChooserDescriptorFactory.createSingleFileDescriptor()
-                        .withTitle("Select npx Executable"),
+                        .withTitle("Select @knip/language-server Entry Point (src/index.js)"),
                     project
-                ).bindText(settings::npxPath)
-                    .comment("Leave empty to auto-detect")
+                ).bindText(settings::languageServerPath)
+                    .comment("Leave empty to auto-detect. Install with: npm install -g @knip/language-server")
             }
         }
 

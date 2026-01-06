@@ -9,20 +9,30 @@ import org.junit.Test
 class KnipStreamConnectionProviderTest {
 
     @Test
-    fun testFindNpxPathReturnsNonEmpty() {
-        // The findNpxPath should always return something (either found path or fallback)
-        val npxPath = KnipStreamConnectionProvider.findNpxPath()
-        assertNotNull("npxPath should not be null", npxPath)
-        assertTrue("npxPath should not be empty", npxPath.isNotEmpty())
+    fun testFindNodePathReturnsNonEmpty() {
+        // The findNodePath should always return something (either found path or fallback)
+        val nodePath = KnipStreamConnectionProvider.findNodePath()
+        assertNotNull("nodePath should not be null", nodePath)
+        assertTrue("nodePath should not be empty", nodePath.isNotEmpty())
     }
 
     @Test
-    fun testFindNpxPathContainsNpx() {
-        val npxPath = KnipStreamConnectionProvider.findNpxPath()
+    fun testFindNodePathContainsNode() {
+        val nodePath = KnipStreamConnectionProvider.findNodePath()
         assertTrue(
-            "npxPath should contain 'npx'",
-            npxPath.lowercase().contains("npx")
+            "nodePath should contain 'node'",
+            nodePath.lowercase().contains("node")
         )
+    }
+
+    @Test
+    fun testFindLanguageServerPathReturnsNullOrValidPath() {
+        // The findLanguageServerPath may return null if not installed, or a valid path
+        val lsPath = KnipStreamConnectionProvider.findLanguageServerPath(null)
+        if (lsPath != null) {
+            assertTrue("Language server path should end with index.js", lsPath.endsWith("index.js"))
+        }
+        // null is also acceptable if the package is not installed
     }
 
     @Test

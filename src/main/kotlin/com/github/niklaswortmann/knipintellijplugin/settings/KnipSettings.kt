@@ -22,7 +22,7 @@ class KnipSettings : PersistentStateComponent<KnipSettings.State> {
     data class State(
         var enabled: Boolean = true,
         var nodePath: String = "",
-        var npxPath: String = "",
+        var languageServerPath: String = "",
         var serverArguments: String = "--stdio"
     )
 
@@ -42,9 +42,9 @@ class KnipSettings : PersistentStateComponent<KnipSettings.State> {
         get() = myState.nodePath
         set(value) { myState.nodePath = value }
 
-    var npxPath: String
-        get() = myState.npxPath
-        set(value) { myState.npxPath = value }
+    var languageServerPath: String
+        get() = myState.languageServerPath
+        set(value) { myState.languageServerPath = value }
 
     var serverArguments: String
         get() = myState.serverArguments
