@@ -1,39 +1,28 @@
 package com.github.niklaswortmann.knipintellijplugin
 
-import com.intellij.ide.highlighter.XmlFileType
-import com.intellij.openapi.components.service
-import com.intellij.psi.xml.XmlFile
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import com.intellij.util.PsiErrorElementUtil
-import com.github.niklaswortmann.knipintellijplugin.services.MyProjectService
 
 @TestDataPath("\$CONTENT_ROOT/src/test/testData")
 class MyPluginTest : BasePlatformTestCase() {
 
-    fun testXMLFile() {
-        val psiFile = myFixture.configureByText(XmlFileType.INSTANCE, "<foo>bar</foo>")
-        val xmlFile = assertInstanceOf(psiFile, XmlFile::class.java)
-
-        assertFalse(PsiErrorElementUtil.hasErrors(project, xmlFile.virtualFile))
-
-        assertNotNull(xmlFile.rootTag)
-
-        xmlFile.rootTag?.let {
-            assertEquals("foo", it.name)
-            assertEquals("bar", it.value.text)
-        }
+    fun testBundleMessages() {
+        // Verify bundle messages are accessible
+        assertEquals("Knip", MyBundle.message("pluginName"))
+        assertEquals("Find unused files, dependencies and exports in JavaScript/TypeScript projects", 
+            MyBundle.message("pluginDescription"))
+        assertEquals("Knip language server started", MyBundle.message("serverStarted"))
+        assertEquals("Knip language server stopped", MyBundle.message("serverStopped"))
+        assertEquals("Knip", MyBundle.message("settingsTitle"))
+        assertEquals("Node.js path", MyBundle.message("settingsNodePath"))
+        assertEquals("Enable Knip", MyBundle.message("settingsEnabled"))
     }
 
-    fun testRename() {
-        myFixture.testRename("foo.xml", "foo_after.xml", "a2")
+    fun testServerErrorMessage() {
+        val errorMsg = "Connection refused"
+        val formatted = MyBundle.message("serverError", errorMsg)
+        assertTrue("Error message should contain the error", formatted.contains(errorMsg))
     }
 
-    fun testProjectService() {
-        val projectService = project.service<MyProjectService>()
-
-        assertNotSame(projectService.getRandomNumber(), projectService.getRandomNumber())
-    }
-
-    override fun getTestDataPath() = "src/test/testData/rename"
+    override fun getTestDataPath() = "src/test/testData"
 }
