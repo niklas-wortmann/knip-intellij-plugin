@@ -22,3 +22,19 @@
     "NEW INSTRUCTION": "WHEN addressing recurring Knip codeAction errors THEN create a task, add tests, and implement client-side fix"
 }
 
+[2026-01-06 15:42] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "feature utilization parity",
+    "EXPECTATION": "Ensure the IntelliJ client uses all diagnostics features documented by the Knip language server; do not assume missing support.",
+    "NEW INSTRUCTION": "WHEN evaluating Knip LS feature usage THEN cross-check README diagnostics and align client capabilities"
+}
+
+[2026-01-06 15:51] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "feature utilization parity",
+    "EXPECTATION": "Verify that the IntelliJ client leverages all diagnostics features documented by the Knip language server README before asserting support or proposing changes.",
+    "NEW INSTRUCTION": "WHEN asked about Knip diagnostics feature usage THEN compare against README list and report gaps with fixes"
+}
+

@@ -38,3 +38,23 @@
     "NEW INSTRUCTION": "WHEN receiving workspace/configuration request THEN return Knip settings including editor.exports.quickfix.enabled true"
 }
 
+[2026-01-06 15:22] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid API usage",
+    "TOOL": "Knip language server via LSP4IJ (textDocument/codeAction)",
+    "ERROR": "Null 'editor' config causes codeAction crash",
+    "ROOT CAUSE": "KnipLanguageClient used a non-existent createSettings hook, so workspace/configuration was never provided.",
+    "PROJECT NOTE": "In lsp4ij 0.11.0, supply settings via LSPClientFeatures.setWorkspaceConfigurationProvider; return sections and config (e.g., editor.exports.quickfix.enabled).",
+    "NEW INSTRUCTION": "WHEN implementing Knip settings in lsp4ij 0.11.0 THEN use WorkspaceConfigurationProvider in client features"
+}
+
+[2026-01-06 15:54] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid API usage",
+    "TOOL": "Knip language server via LSP4IJ (textDocument/codeAction)",
+    "ERROR": "createSettings override unused; server gets no configuration",
+    "ROOT CAUSE": "With lsp4ij 0.11.0, LanguageClientImpl.createSettings is not called; workspace/configuration must be provided via WorkspaceConfigurationProvider, leaving 'editor' null in codeAction.",
+    "PROJECT NOTE": "This repo uses lsp4ij 0.11.0 (gradle.properties). Provide Knip settings by registering a WorkspaceConfigurationProvider in KnipClientFeatures and return a section 'knip' with editor.exports.quickfix.enabled.",
+    "NEW INSTRUCTION": "WHEN using lsp4ij 0.11.0 THEN register WorkspaceConfigurationProvider in KnipClientFeatures returning 'knip' config"
+}
+

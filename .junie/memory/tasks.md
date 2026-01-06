@@ -58,3 +58,23 @@
     "NEW INSTRUCTION": "WHEN codeAction error occurs THEN inspect initialize capabilities and reproduce before disabling feature"
 }
 
+[2026-01-06 15:23] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "disable code actions",
+    "MISSING STEPS": "reproduce bug, configure client settings, add tests, run build, verify fix, push",
+    "BOTTLENECK": "Workaround disabled a supported feature without reproducing and verifying a proper fix.",
+    "PROJECT NOTE": "Implement KnipLanguageClient to supply workspace/configuration (editor.exports.quickfix.enabled) and remove the code-action disable; follow AGENTS.md mandatory push workflow.",
+    "NEW INSTRUCTION": "WHEN LSP codeAction fails reading editor THEN add workspace/configuration client returning editor.exports.quickfix.enabled true"
+}
+
+[2026-01-06 15:43] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "disable code actions,close issue early",
+    "MISSING STEPS": "read docs,validate workspace/configuration payload,reproduce in IDE,inspect server logs,add integration tests,verify diagnostics features",
+    "BOTTLENECK": "Skipped understanding server config contract before implementing a workaround.",
+    "PROJECT NOTE": "createSettings() must nest values under the 'knip' key for LSP4IJ.",
+    "NEW INSTRUCTION": "WHEN LSP server requests workspace/configuration section THEN return settings nested under section key and add tests"
+}
+
