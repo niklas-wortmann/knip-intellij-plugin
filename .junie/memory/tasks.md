@@ -28,3 +28,13 @@
     "NEW INSTRUCTION": "WHEN claiming a ready task THEN list steps, apply changes, run build, commit and push"
 }
 
+[2026-01-06 15:01] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "gather reproduction details, confirm environment, check issue template",
+    "BOTTLENECK": "Insufficient diagnostic details (repro/environment) may hinder triage.",
+    "PROJECT NOTE": "If the repo has .github/ISSUE_TEMPLATE, use the bug template fields.",
+    "NEW INSTRUCTION": "WHEN bug details lack reproduction or environment THEN ask_user to collect them before creating"
+}
+
