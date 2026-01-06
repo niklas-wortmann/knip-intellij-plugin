@@ -28,3 +28,13 @@
     "NEW INSTRUCTION": "WHEN Kotlin shows 'overrides nothing' on an API override THEN check library version and match exact method signature"
 }
 
+[2026-01-06 15:20] - Updated by Junie - Error analysis
+{
+    "TYPE": "runtime/integration",
+    "TOOL": "Knip language server via LSP4IJ (textDocument/codeAction)",
+    "ERROR": "Cannot read properties of null (reading 'editor')",
+    "ROOT CAUSE": "The language server expects editor configuration via workspace/configuration, but the client did not supply it, leaving 'editor' null during codeAction handling.",
+    "PROJECT NOTE": "With lsp4ij 0.11.0, ensure your LanguageClient responds to workspace/configuration with Knip settings (editor.exports.quickfix.enabled). Verify KnipLanguageClient is registered in KnipLanguageServerFactory and actually returns these settings.",
+    "NEW INSTRUCTION": "WHEN receiving workspace/configuration request THEN return Knip settings including editor.exports.quickfix.enabled true"
+}
+

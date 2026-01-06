@@ -14,3 +14,11 @@
     "NEW INSTRUCTION": "WHEN suggesting disabling Knip code actions THEN verify upstream docs and debug client-side handling"
 }
 
+[2026-01-06 15:19] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "workflow completeness",
+    "EXPECTATION": "Provide a proper fix for Knip codeAction errors by investigating client-side causes, and include a task and tests.",
+    "NEW INSTRUCTION": "WHEN addressing recurring Knip codeAction errors THEN create a task, add tests, and implement client-side fix"
+}
+

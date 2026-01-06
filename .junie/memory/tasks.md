@@ -48,3 +48,13 @@
     "NEW INSTRUCTION": "WHEN code changes are applied THEN run gradle build and update issue with results"
 }
 
+[2026-01-06 15:18] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "disable feature, close issue",
+    "MISSING STEPS": "review docs, check server capabilities, reproduce bug, manual IDE test, version gate, feature flag, file upstream bug",
+    "BOTTLENECK": "No validation of server capabilities before globally disabling code actions.",
+    "PROJECT NOTE": "Gate code actions using LSP initialize capabilities and provide a user-toggle/version check instead of blanket disabling.",
+    "NEW INSTRUCTION": "WHEN codeAction error occurs THEN inspect initialize capabilities and reproduce before disabling feature"
+}
+
