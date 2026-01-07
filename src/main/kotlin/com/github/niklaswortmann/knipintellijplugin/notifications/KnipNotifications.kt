@@ -16,8 +16,9 @@ object KnipNotifications {
      * Show an info notification.
      */
     fun info(project: Project, content: String, title: String = "Knip") {
-        NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
+        val notificationGroup = NotificationGroupManager.getInstance()
+            .getNotificationGroup(NOTIFICATION_GROUP_ID) ?: return
+        notificationGroup
             .createNotification(title, content, NotificationType.INFORMATION)
             .notify(project)
     }
@@ -26,8 +27,9 @@ object KnipNotifications {
      * Show a warning notification.
      */
     fun warning(project: Project, content: String, title: String = "Knip") {
-        NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
+        val notificationGroup = NotificationGroupManager.getInstance()
+            .getNotificationGroup(NOTIFICATION_GROUP_ID) ?: return
+        notificationGroup
             .createNotification(title, content, NotificationType.WARNING)
             .notify(project)
     }
@@ -36,8 +38,9 @@ object KnipNotifications {
      * Show an error notification.
      */
     fun error(project: Project, content: String, title: String = "Knip") {
-        NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
+        val notificationGroup = NotificationGroupManager.getInstance()
+            .getNotificationGroup(NOTIFICATION_GROUP_ID) ?: return
+        notificationGroup
             .createNotification(title, content, NotificationType.ERROR)
             .notify(project)
     }

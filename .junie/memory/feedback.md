@@ -54,3 +54,11 @@
     "NEW INSTRUCTION": "WHEN proposing discovery UX for Knip THEN prefer file-type recommendation over in-IDE popups"
 }
 
+[2026-01-07 14:07] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "task format compliance",
+    "EXPECTATION": "Produce a Beads task instead of an arbitrary task document for the migration work.",
+    "NEW INSTRUCTION": "WHEN asked to create a task THEN use Beads task format"
+}
+

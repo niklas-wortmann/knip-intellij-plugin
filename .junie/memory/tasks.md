@@ -98,3 +98,33 @@
     "NEW INSTRUCTION": "WHEN adding plugin and file type icons THEN place pluginIcon.svg in META-INF and load 16px icon via IconLoader"
 }
 
+[2026-01-07 14:07] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "fetch external docs",
+    "MISSING STEPS": "scan project",
+    "BOTTLENECK": "Did not comprehensively scan for all lsp4ij usages before drafting task.",
+    "PROJECT NOTE": "plugin.xml and gradle.properties both reference lsp4ij; ensure all related extensions are enumerated for removal.",
+    "NEW INSTRUCTION": "WHEN planning migration from lsp4ij to Platform LSP THEN search_project for lsp4ij usages and list files"
+}
+
+[2026-01-07 14:07] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "create generic task document",
+    "MISSING STEPS": "clarify \"beads task\" requirements, produce beads-formatted task",
+    "BOTTLENECK": "Unclear definition and template for beads task.",
+    "PROJECT NOTE": "-",
+    "NEW INSTRUCTION": "WHEN user requests beads task THEN ask_user for beads format template or example"
+}
+
+[2026-01-07 14:28] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "analyze failures, locate source, implement fix, run tests, iterate",
+    "BOTTLENECK": "No analysis or code changes after initial failing test run.",
+    "PROJECT NOTE": "Failures stem from NotificationGroupManager.getNotificationGroup returning null; add safe handling or proper notification group setup.",
+    "NEW INSTRUCTION": "WHEN first test run reports failures THEN analyze first failure, fix source, rerun tests"
+}
+

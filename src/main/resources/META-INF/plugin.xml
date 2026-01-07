@@ -5,7 +5,7 @@
     <vendor>Jan-Niklas Wortmann</vendor>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.redhat.devtools.lsp4ij</depends>
+    <depends>com.intellij.modules.ultimate</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable
@@ -26,6 +26,10 @@
             fieldName="INSTANCE"
             fileNames="knip.json;knip.jsonc"
             patterns="knip.ts;knip.config.ts;knip.config.js"/>
+        
+        <!-- Platform LSP API Registration -->
+        <platform.lsp.serverSupportProvider
+            implementation="com.github.niklaswortmann.knipintellijplugin.lsp.KnipLspServerSupportProvider"/>
     </extensions>
 
     <actions>
@@ -36,37 +40,4 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
-
-    <!-- LSP4IJ Language Server Registration -->
-    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
-        <server id="knipLanguageServer"
-                name="Knip"
-                factoryClass="com.github.niklaswortmann.knipintellijplugin.lsp.KnipLanguageServerFactory">
-            <description><![CDATA[
-                Knip language server for detecting unused files, dependencies, and exports in JavaScript/TypeScript projects.
-            ]]></description>
-        </server>
-
-        <!-- File type mappings for Knip language server -->
-        <fileTypeMapping fileType="JavaScript"
-                         serverId="knipLanguageServer"
-                         languageId="javascript" />
-        <fileTypeMapping fileType="TypeScript"
-                         serverId="knipLanguageServer"
-                         languageId="typescript" />
-        <fileTypeMapping fileType="JSX Harmony"
-                         serverId="knipLanguageServer"
-                         languageId="javascriptreact" />
-        <fileTypeMapping fileType="TypeScript JSX"
-                         serverId="knipLanguageServer"
-                         languageId="typescriptreact" />
-        
-        <!-- File name pattern mappings for config files -->
-        <fileNamePatternMapping patterns="package.json;knip.json;knip.jsonc"
-                                serverId="knipLanguageServer"
-                                languageId="json" />
-        <fileNamePatternMapping patterns="*.config.js;*.config.ts;*.config.mjs;*.config.cjs"
-                                serverId="knipLanguageServer"
-                                languageId="javascript" />
-    </extensions>
 </idea-plugin>

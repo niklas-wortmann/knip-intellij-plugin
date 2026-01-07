@@ -157,7 +157,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Knip](https://knip.dev) - The underlying tool for finding unused code
 - [@knip/language-server](https://www.npmjs.com/package/@knip/language-server) - The language server this plugin uses
-- [LSP4IJ](https://github.com/redhat-developer/lsp4ij) - LSP support for IntelliJ
+- [JetBrains Platform LSP API](https://plugins.jetbrains.com/docs/intellij/language-server-protocol.html) - Native LSP support for IntelliJ
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template).

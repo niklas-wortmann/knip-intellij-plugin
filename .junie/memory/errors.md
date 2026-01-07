@@ -68,3 +68,13 @@
     "NEW INSTRUCTION": "WHEN semantic errors report unresolved reference THEN update or remove all remaining symbol usages"
 }
 
+[2026-01-07 14:27] - Updated by Junie - Error analysis
+{
+    "TYPE": "missing context",
+    "TOOL": "run_test",
+    "ERROR": "NPE: NotificationGroupManager returned null for unregistered notification group",
+    "ROOT CAUSE": "The notification group ID used by KnipNotifications is not registered in plugin.xml, so getNotificationGroup returns null during tests.",
+    "PROJECT NOTE": "Declare a <notificationGroup> with the exact ID used by KnipNotifications in src/main/resources/META-INF/plugin.xml and keep the constant in code aligned.",
+    "NEW INSTRUCTION": "WHEN NotificationGroupManager.getNotificationGroup returns null THEN declare matching notificationGroup in plugin.xml"
+}
+
