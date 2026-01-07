@@ -15,6 +15,7 @@
             displayName="Knip"
             nonDefaultProject="true"/>
         <notificationGroup id="Knip" displayType="BALLOON"/>
+        <postStartupActivity implementation="com.github.niklaswortmann.knipintellijplugin.startup.KnipDetectionActivity"/>
     </extensions>
 
     <actions>
