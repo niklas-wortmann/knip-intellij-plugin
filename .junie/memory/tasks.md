@@ -78,3 +78,23 @@
     "NEW INSTRUCTION": "WHEN LSP server requests workspace/configuration section THEN return settings nested under section key and add tests"
 }
 
+[2026-01-07 13:09] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "run tests, remove 'Don't Show Again' action, propose deleting KnipApplicationSettings",
+    "MISSING STEPS": "confirm requirement, add check for plugin installed state, run build",
+    "BOTTLENECK": "Misinterpreted when the notification should appear versus actual plugin install state.",
+    "PROJECT NOTE": "In an IntelliJ plugin, use PluginManager to detect plugin enabled state; project-level PersistentStateComponent is suitable for per-project flags.",
+    "NEW INSTRUCTION": "WHEN requirement depends on plugin install/enabled state THEN ask_user to confirm desired condition before changes"
+}
+
+[2026-01-07 13:18] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "generate temporary svg,delete temporary svg",
+    "MISSING STEPS": "update file type to return icon,verify icon packaging via run build",
+    "BOTTLENECK": "Asset preparation and correct resource placement for IntelliJ conventions",
+    "PROJECT NOTE": "Prefer SVG icons; place META-INF/pluginIcon.svg and load 16px icon via IconLoader",
+    "NEW INSTRUCTION": "WHEN adding plugin and file type icons THEN place pluginIcon.svg in META-INF and load 16px icon via IconLoader"
+}
+

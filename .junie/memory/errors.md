@@ -58,3 +58,13 @@
     "NEW INSTRUCTION": "WHEN using lsp4ij 0.11.0 THEN register WorkspaceConfigurationProvider in KnipClientFeatures returning 'knip' config"
 }
 
+[2026-01-07 13:08] - Updated by Junie - Error analysis
+{
+    "TYPE": "compile error",
+    "TOOL": "search_replace",
+    "ERROR": "Unresolved reference 'KnipApplicationSettings'",
+    "ROOT CAUSE": "Import was switched to project settings but a later usage remained unchanged.",
+    "PROJECT NOTE": "KnipDetectionActivity's \"Don't Show Again\" action depended on application settings; remove or adapt when moving to project-level KnipSettings.",
+    "NEW INSTRUCTION": "WHEN semantic errors report unresolved reference THEN update or remove all remaining symbol usages"
+}
+

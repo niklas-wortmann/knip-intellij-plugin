@@ -38,3 +38,19 @@
     "NEW INSTRUCTION": "WHEN asked about Knip diagnostics feature usage THEN compare against README list and report gaps with fixes"
 }
 
+[2026-01-07 13:06] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "popup trigger logic",
+    "EXPECTATION": "Show the Knip suggestion popup only when the Knip plugin is not installed; do not display it every time.",
+    "NEW INSTRUCTION": "WHEN deciding to show the Knip popup THEN check plugin not installed before showing"
+}
+
+[2026-01-07 13:11] - Updated by Junie
+{
+    "TYPE": "correction",
+    "CATEGORY": "discovery mechanism",
+    "EXPECTATION": "Do not use a popup for Knip discovery; instead rely on JetBrains plugin recommendations via file-type association for Knip config files.",
+    "NEW INSTRUCTION": "WHEN proposing discovery UX for Knip THEN prefer file-type recommendation over in-IDE popups"
+}
+
