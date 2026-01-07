@@ -29,7 +29,7 @@ class KnipDetectionActivity : ProjectActivity {
         private const val MARKETPLACE_URL = "https://plugins.jetbrains.com/plugin/MARKETPLACE_ID"
         
         // Knip package names to detect
-        private val KNIP_PACKAGES = setOf("knip", "@knip/knip")
+        private val KNIP_PACKAGES = setOf("knip")
         
         // Knip config file names
         private val KNIP_CONFIG_FILES = setOf("knip.json", "knip.jsonc", "knip.ts", "knip.config.ts", "knip.config.js")

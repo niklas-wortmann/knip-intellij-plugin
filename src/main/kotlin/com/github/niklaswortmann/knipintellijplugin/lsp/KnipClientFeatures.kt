@@ -1,10 +1,19 @@
 package com.github.niklaswortmann.knipintellijplugin.lsp
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 import com.redhat.devtools.lsp4ij.ServerStatus
 import com.redhat.devtools.lsp4ij.client.features.LSPClientFeatures
 import org.eclipse.lsp4j.jsonrpc.Endpoint
 import java.lang.reflect.Proxy
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Custom LSP client features for the Knip language server.
@@ -13,6 +22,9 @@ import java.lang.reflect.Proxy
  * The Knip language server requires a custom "knip.start" request to be sent
  * after initialization to start the session and begin publishing diagnostics.
  * This is different from standard LSP servers that start automatically.
+ * 
+ * This class also manages progress visualization during server startup,
+ * showing a progress indicator in the IDE status bar while Knip is analyzing the project.
  */
 class KnipClientFeatures : LSPClientFeatures() {
     
@@ -23,23 +35,109 @@ class KnipClientFeatures : LSPClientFeatures() {
         const val REQUEST_START = "knip.start"
         const val REQUEST_STOP = "knip.stop"
         const val REQUEST_RESTART = "knip.restart"
+        
+        // Progress messages
+        private const val PROGRESS_TITLE = "Knip"
+        private const val PROGRESS_STARTING = "Starting language server..."
+        private const val PROGRESS_ANALYZING = "Analyzing project for unused code..."
     }
     
     private var knipSessionStarted = false
+    private val progressIndicatorRef = AtomicReference<ProgressIndicator?>(null)
+    private val analysisComplete = AtomicBoolean(false)
+    private var analysisLatch: CountDownLatch? = null
     
     /**
      * Called when the language server status changes.
      * When the server reaches "started" status, we send the custom "knip.start" request
      * to trigger the Knip session initialization and diagnostics publishing.
+     * 
+     * Progress visualization:
+     * - starting: Show "Starting language server..."
+     * - started: Update to "Analyzing project..." and send knip.start
+     * - stopped/stopping: Cancel progress indicator
      */
     override fun handleServerStatusChanged(serverStatus: ServerStatus) {
         super.handleServerStatusChanged(serverStatus)
         
-        if (serverStatus == ServerStatus.started && !knipSessionStarted) {
-            startKnipSession()
-        } else if (serverStatus == ServerStatus.stopped || serverStatus == ServerStatus.stopping) {
-            knipSessionStarted = false
+        when (serverStatus) {
+            ServerStatus.starting -> {
+                showStartupProgress()
+            }
+            ServerStatus.started -> {
+                if (!knipSessionStarted) {
+                    updateProgressMessage(PROGRESS_ANALYZING)
+                    startKnipSession()
+                }
+            }
+            ServerStatus.stopped, ServerStatus.stopping -> {
+                knipSessionStarted = false
+                finishProgress()
+            }
+            else -> { /* ignore other states */ }
         }
+    }
+    
+    /**
+     * Shows a background progress indicator during Knip server startup.
+     * The progress is shown in the IDE status bar and can be viewed in the Background Tasks popup.
+     */
+    private fun showStartupProgress() {
+        val project = serverWrapper?.project ?: return
+        
+        // Reset state for new startup
+        analysisComplete.set(false)
+        analysisLatch = CountDownLatch(1)
+        
+        ApplicationManager.getApplication().invokeLater {
+            ProgressManager.getInstance().run(object : Task.Backgroundable(
+                project,
+                PROGRESS_TITLE,
+                true  // cancellable
+            ) {
+                override fun run(indicator: ProgressIndicator) {
+                    progressIndicatorRef.set(indicator)
+                    indicator.isIndeterminate = true
+                    indicator.text = PROGRESS_STARTING
+                    
+                    LOG.info("Knip startup progress indicator started")
+                    
+                    // Wait for analysis to complete or cancellation
+                    try {
+                        while (!analysisComplete.get() && !indicator.isCanceled) {
+                            analysisLatch?.await(500, TimeUnit.MILLISECONDS)
+                        }
+                    } catch (e: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                    }
+                    
+                    progressIndicatorRef.set(null)
+                    LOG.info("Knip startup progress indicator finished")
+                }
+                
+                override fun onCancel() {
+                    LOG.info("Knip startup progress was cancelled by user")
+                    finishProgress()
+                }
+            })
+        }
+    }
+    
+    /**
+     * Updates the progress indicator message.
+     */
+    private fun updateProgressMessage(message: String) {
+        progressIndicatorRef.get()?.let { indicator ->
+            indicator.text = message
+        }
+    }
+    
+    /**
+     * Marks the progress as complete and releases the progress indicator.
+     */
+    private fun finishProgress() {
+        analysisComplete.set(true)
+        analysisLatch?.countDown()
     }
     
     /**
@@ -57,6 +155,7 @@ class KnipClientFeatures : LSPClientFeatures() {
         wrapper.initializedServer.thenAccept { server ->
             if (server == null) {
                 LOG.warn("Language server is null, cannot start Knip session")
+                finishProgress()
                 return@thenAccept
             }
             
@@ -69,15 +168,19 @@ class KnipClientFeatures : LSPClientFeatures() {
                     endpoint.request(REQUEST_START, null).thenAccept {
                         LOG.info("Knip session started successfully")
                         knipSessionStarted = true
+                        finishProgress()
                     }.exceptionally { error ->
                         LOG.warn("Failed to start Knip session: ${error.message}")
+                        finishProgress()
                         null
                     }
                 } else {
                     LOG.warn("Could not extract Endpoint from language server proxy")
+                    finishProgress()
                 }
             } catch (e: Exception) {
                 LOG.warn("Failed to start Knip session: ${e.message}", e)
+                finishProgress()
             }
         }
     }
