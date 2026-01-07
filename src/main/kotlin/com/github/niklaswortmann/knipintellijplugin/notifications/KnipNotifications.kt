@@ -1,6 +1,6 @@
 package com.github.niklaswortmann.knipintellijplugin.notifications
 
-import com.github.niklaswortmann.knipintellijplugin.MyBundle
+import com.github.niklaswortmann.knipintellijplugin.KnipBundle
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
@@ -46,21 +46,21 @@ object KnipNotifications {
      * Show server started notification.
      */
     fun serverStarted(project: Project) {
-        info(project, MyBundle.message("serverStarted"))
+        info(project, KnipBundle.message("serverStarted"))
     }
 
     /**
      * Show server stopped notification.
      */
     fun serverStopped(project: Project) {
-        info(project, MyBundle.message("serverStopped"))
+        info(project, KnipBundle.message("serverStopped"))
     }
 
     /**
      * Show server error notification.
      */
     fun serverError(project: Project, errorMessage: String) {
-        error(project, MyBundle.message("serverError", errorMessage))
+        error(project, KnipBundle.message("serverError", errorMessage))
     }
 
     /**
