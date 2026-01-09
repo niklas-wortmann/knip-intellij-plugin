@@ -128,3 +128,33 @@
     "NEW INSTRUCTION": "WHEN first test run reports failures THEN analyze first failure, fix source, rerun tests"
 }
 
+[2026-01-09 03:43] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "scan project",
+    "MISSING STEPS": "set task dependencies",
+    "BOTTLENECK": "Unnecessary intent to scan repo instead of directly creating tasks from review.",
+    "PROJECT NOTE": "Several refactor tasks depend on adding the JavaScript plugin; ensure dependencies are linked.",
+    "NEW INSTRUCTION": "WHEN review already specifies issues and files THEN create tasks directly and link dependencies"
+}
+
+[2026-01-09 04:00] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "scan project, run build, run plugin verifier, update docs",
+    "BOTTLENECK": "No verification after changing plugin dependency.",
+    "PROJECT NOTE": "After switching to JavaScript dependency, ensure no remaining Ultimate-only usages and verify build targets.",
+    "NEW INSTRUCTION": "WHEN modifying plugin.xml dependencies THEN run build and plugin verifier to validate compatibility"
+}
+
+[2026-01-09 04:43] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "progress text/indicator rework twice",
+    "MISSING STEPS": "verify supported files,add activation tests,update docs",
+    "BOTTLENECK": "Refactor blocked by non-public JS LSP APIs",
+    "PROJECT NOTE": "Confirm isSupportedFile includes .ts/.tsx/.js/.jsx in addition to knip config files",
+    "NEW INSTRUCTION": "WHEN modifying server activation rules THEN add tests ensuring TS/JS files trigger LSP"
+}
+

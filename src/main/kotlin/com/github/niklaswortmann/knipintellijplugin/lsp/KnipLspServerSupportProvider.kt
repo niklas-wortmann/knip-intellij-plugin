@@ -1,23 +1,25 @@
 package com.github.niklaswortmann.knipintellijplugin.lsp
 
+import com.github.niklaswortmann.knipintellijplugin.KnipBundle
 import com.github.niklaswortmann.knipintellijplugin.settings.KnipSettings
 import com.github.niklaswortmann.knipintellijplugin.settings.KnipSettingsConfigurable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.platform.lsp.api.LspServer
 import com.intellij.platform.lsp.api.LspServerManager
+import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.platform.lsp.api.LspServerSupportProvider
 import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem
+import com.intellij.platform.util.progress.reportProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * LSP Server Support Provider for the Knip language server.
@@ -59,51 +61,67 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
     
     /**
      * Starts the Knip session with a progress indicator in the IDE status bar.
+     * Uses a managed CoroutineScope with SupervisorJob for proper lifecycle management.
+     * The scope is cancelled after the work completes to prevent memory leaks.
      */
+    @Suppress("UnstableApiUsage")
     private fun startKnipSessionWithProgress(project: Project) {
-        ApplicationManager.getApplication().invokeLater {
-            ProgressManager.getInstance().run(object : Task.Backgroundable(
-                project,
-                PROGRESS_TITLE,
-                true  // cancellable
-            ) {
-                private val analysisComplete = AtomicBoolean(false)
-                
-                override fun run(indicator: ProgressIndicator) {
-                    indicator.isIndeterminate = true
-                    indicator.text = PROGRESS_STARTING
-                    
+        // Create a supervised scope that will be cancelled after work completes
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        scope.launch {
+            try {
+                withBackgroundProgress(project, KnipBundle.message("progressTitle"), cancellable = true) {
                     LOG.info("Knip startup progress indicator started")
                     
-                    // Launch coroutine to send knip.start request
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            // Wait for server to be fully initialized
-                            delay(2000)
-                            
-                            // Update progress message
-                            indicator.text = PROGRESS_ANALYZING
-                            
+                    reportProgress(2) { reporter ->
+                        // Step 1: Wait for server to be fully initialized
+                        reporter.itemStep(KnipBundle.message("progressStartingServer")) {
+                            waitForServerReady(project)
+                        }
+                        
+                        // Step 2: Send knip.start request to initialize session
+                        reporter.itemStep(KnipBundle.message("progressInitializingSession")) {
                             sendKnipStartRequest(project)
-                            
-                            LOG.info("Knip startup progress indicator finished")
-                        } finally {
-                            analysisComplete.set(true)
                         }
                     }
                     
-                    // Wait for analysis to complete or cancellation
-                    while (!analysisComplete.get() && !indicator.isCanceled) {
-                        Thread.sleep(100)
-                    }
+                    LOG.info("Knip startup progress indicator finished")
                 }
-                
-                override fun onCancel() {
-                    LOG.info("Knip startup progress was cancelled by user")
-                    analysisComplete.set(true)
-                }
-            })
+            } finally {
+                // Cancel the scope to clean up resources
+                scope.cancel()
+            }
         }
+    }
+    
+    /**
+     * Waits for the LSP server to be in a running state.
+     * Polls every 100ms with a maximum timeout of 30 seconds.
+     */
+    private suspend fun waitForServerReady(project: Project) {
+        val maxWaitMs = 30_000L
+        val pollIntervalMs = 100L
+        var waited = 0L
+        
+        while (waited < maxWaitMs) {
+            val lspServerManager = LspServerManager.getInstance(project)
+            val servers = lspServerManager.getServersForProvider(KnipLspServerSupportProvider::class.java)
+            
+            // Check if any server is running
+            val hasRunningServer = servers.any { server ->
+                server.state == LspServerState.Running
+            }
+            
+            if (hasRunningServer) {
+                LOG.info("Knip LSP server is ready after ${waited}ms")
+                return
+            }
+            
+            delay(pollIntervalMs)
+            waited += pollIntervalMs
+        }
+        
+        LOG.warn("Timeout waiting for Knip LSP server to be ready after ${maxWaitMs}ms")
     }
     
     /**
@@ -140,11 +158,6 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
     companion object {
         private val LOG = Logger.getInstance(KnipLspServerSupportProvider::class.java)
         
-        // Progress messages
-        private const val PROGRESS_TITLE = "Knip"
-        private const val PROGRESS_STARTING = "Starting language server..."
-        private const val PROGRESS_ANALYZING = "Analyzing project for unused code..."
-        
         /**
          * Supported file extensions for the Knip language server.
          */
@@ -176,12 +189,12 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
                 return true
             }
 
-            // Check config file patterns
-            if (fileName.endsWith(".config.js") ||
-                fileName.endsWith(".config.ts") ||
-                fileName.endsWith(".config.mjs") ||
-                fileName.endsWith(".config.cjs") ||
-                fileName == "knip.ts"
+            // Check Knip-specific config file patterns
+            if (fileName == "knip.ts" ||
+                fileName == "knip.config.ts" ||
+                fileName == "knip.config.js" ||
+                fileName == "knip.config.mjs" ||
+                fileName == "knip.config.cjs"
             ) {
                 return true
             }

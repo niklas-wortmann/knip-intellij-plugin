@@ -5,7 +5,7 @@
     <vendor>Jan-Niklas Wortmann</vendor>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.ultimate</depends>
+    <depends>JavaScript</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable
@@ -16,16 +16,10 @@
             nonDefaultProject="true"/>
         <notificationGroup id="Knip" displayType="BALLOON"/>
         
-        <!-- File type registration for Knip config files -->
-        <!-- This enables automatic plugin discovery: when a user opens a Knip config file -->
-        <!-- in an IDE without this plugin, the IDE will suggest installing it -->
-        <!-- See: https://plugins.jetbrains.com/docs/marketplace/intellij-plugin-recommendations.html#file-type -->
-        <fileType
-            name="Knip Config"
-            implementationClass="com.github.niklaswortmann.knipintellijplugin.filetype.KnipConfigFileType"
-            fieldName="INSTANCE"
-            fileNames="knip.json;knip.jsonc"
-            patterns="knip.ts;knip.config.ts;knip.config.js"/>
+        <!-- Plugin discovery via npm dependency -->
+        <!-- When a project has 'knip' in package.json, the IDE will suggest installing this plugin -->
+        <!-- See: https://plugins.jetbrains.com/docs/marketplace/intellij-plugin-recommendations.html#dependency-support -->
+        <dependencySupport kind="javascript" coordinate="npm:knip" displayName="Knip"/>
         
         <!-- Platform LSP API Registration -->
         <platform.lsp.serverSupportProvider

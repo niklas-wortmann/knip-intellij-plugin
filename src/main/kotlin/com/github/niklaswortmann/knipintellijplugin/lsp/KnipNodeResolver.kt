@@ -2,6 +2,7 @@ package com.github.niklaswortmann.knipintellijplugin.lsp
 
 import com.intellij.openapi.diagnostic.Logger
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Utility class for resolving Node.js and @knip/language-server paths.
@@ -11,7 +12,6 @@ import java.io.File
  * Instead, we locate the installed package and run its entry point directly with node.
  */
 object KnipNodeResolver {
-
     private val LOG = Logger.getInstance(KnipNodeResolver::class.java)
     private val isWindows = System.getProperty("os.name").lowercase().contains("windows")
     private val userHome = System.getProperty("user.home")
@@ -23,7 +23,7 @@ object KnipNodeResolver {
     private var cachedNodePath: String? = null
 
     // Cache for language server paths per project to avoid repeated searches
-    private val languageServerPathCache = mutableMapOf<String?, String?>()
+    private val languageServerPathCache = ConcurrentHashMap<String?, String?>()
 
     /**
      * Common paths where Node.js might be installed
@@ -272,9 +272,8 @@ object KnipNodeResolver {
             }
         }
 
-        // Cache null result to avoid repeated searches
+        // Don't cache null results - allow retry after user installs the package
         LOG.warn("@knip/language-server package not found in any standard location")
-        languageServerPathCache[projectBasePath] = null
         return null
     }
 

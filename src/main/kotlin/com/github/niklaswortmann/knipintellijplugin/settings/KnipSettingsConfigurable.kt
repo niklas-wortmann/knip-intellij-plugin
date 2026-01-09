@@ -18,37 +18,37 @@ class KnipSettingsConfigurable(private val project: Project) : BoundConfigurable
     private val settings = KnipSettings.getInstance(project)
 
     override fun createPanel(): DialogPanel = panel {
-        group("General") {
+        group(KnipBundle.message("settingsGroupGeneral")) {
             row {
                 checkBox(KnipBundle.message("settingsEnabled"))
                     .bindSelected(settings::enabled)
             }
         }
 
-        group("Node.js Configuration") {
+        group(KnipBundle.message("settingsGroupNodeConfig")) {
             row(KnipBundle.message("settingsNodePath")) {
                 textFieldWithBrowseButton(
                     FileChooserDescriptorFactory.createSingleFileDescriptor()
-                        .withTitle("Select Node.js Executable"),
+                        .withTitle(KnipBundle.message("settingsSelectNodeExecutable")),
                     project
                 ).bindText(settings::nodePath)
-                    .comment("Leave empty to use system PATH")
+                    .comment(KnipBundle.message("settingsNodePathComment"))
             }
-            row("Language server path:") {
+            row(KnipBundle.message("settingsLanguageServerPath")) {
                 textFieldWithBrowseButton(
                     FileChooserDescriptorFactory.createSingleFileDescriptor()
-                        .withTitle("Select @knip/language-server Entry Point (src/index.js)"),
+                        .withTitle(KnipBundle.message("settingsSelectLanguageServer")),
                     project
                 ).bindText(settings::languageServerPath)
-                    .comment("Leave empty to auto-detect. Install with: npm install -g @knip/language-server")
+                    .comment(KnipBundle.message("settingsLanguageServerPathComment"))
             }
         }
 
-        group("Language Server") {
-            row("Server arguments:") {
+        group(KnipBundle.message("settingsGroupLanguageServer")) {
+            row(KnipBundle.message("settingsServerArguments")) {
                 textField()
                     .bindText(settings::serverArguments)
-                    .comment("Arguments passed to the language server (default: --stdio)")
+                    .comment(KnipBundle.message("settingsServerArgumentsComment"))
             }
         }
     }

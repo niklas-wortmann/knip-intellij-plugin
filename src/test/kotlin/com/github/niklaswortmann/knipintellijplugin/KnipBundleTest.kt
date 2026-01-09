@@ -16,10 +16,8 @@ class KnipBundleTest {
             "Find unused files, dependencies and exports in JavaScript/TypeScript projects",
             KnipBundle.message("pluginDescription")
         )
-        assertEquals("Knip language server started", KnipBundle.message("serverStarted"))
-        assertEquals("Knip language server stopped", KnipBundle.message("serverStopped"))
         assertEquals("Knip", KnipBundle.message("settingsTitle"))
-        assertEquals("Node.js path", KnipBundle.message("settingsNodePath"))
+        assertEquals("Node.js path:", KnipBundle.message("settingsNodePath"))
         assertEquals("Enable Knip", KnipBundle.message("settingsEnabled"))
     }
 

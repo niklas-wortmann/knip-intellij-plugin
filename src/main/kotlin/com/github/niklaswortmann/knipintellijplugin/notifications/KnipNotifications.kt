@@ -46,20 +46,6 @@ object KnipNotifications {
     }
 
     /**
-     * Show server started notification.
-     */
-    fun serverStarted(project: Project) {
-        info(project, KnipBundle.message("serverStarted"))
-    }
-
-    /**
-     * Show server stopped notification.
-     */
-    fun serverStopped(project: Project) {
-        info(project, KnipBundle.message("serverStopped"))
-    }
-
-    /**
      * Show server error notification.
      */
     fun serverError(project: Project, errorMessage: String) {
