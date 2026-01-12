@@ -15,6 +15,20 @@
             displayName="Knip"
             nonDefaultProject="true"/>
         <notificationGroup id="Knip" displayType="BALLOON"/>
+
+        <!-- File type registration for Knip config files -->
+        <!-- This enables automatic plugin discovery: when a user opens a Knip config file -->
+        <!-- in an IDE without this plugin, the IDE will suggest installing it -->
+        <!-- See: https://plugins.jetbrains.com/docs/marketplace/intellij-plugin-recommendations.html#file-type -->
+        <fileType
+            name="Knip Config"
+            implementationClass="com.github.niklaswortmann.knipintellijplugin.filetype.KnipConfigFileType"
+            fieldName="INSTANCE"
+            fileNames="knip.json;knip.jsonc"
+            patterns="knip.ts;knip.config.ts;knip.config.js"/>
+        
+        <!-- Registry key for Knip language server version override -->
+        <registryKey defaultValue="" description="Override Knip language server version (leave empty for default)" key="knip.language.server.default.version"/>
         
         <!-- Plugin discovery via npm dependency -->
         <!-- When a project has 'knip' in package.json, the IDE will suggest installing this plugin -->
@@ -24,6 +38,13 @@
         <!-- Platform LSP API Registration -->
         <platform.lsp.serverSupportProvider
             implementation="com.github.niklaswortmann.knipintellijplugin.lsp.KnipLspServerSupportProvider"/>
+    </extensions>
+
+    <!-- JavaScript plugin extensions for TypeScript service integration -->
+    <extensions defaultExtensionNs="JavaScript">
+        <languageServiceProvider
+            order="last"
+            implementation="com.github.niklaswortmann.knipintellijplugin.lsp.KnipLanguageServiceProvider"/>
     </extensions>
 
     <actions>

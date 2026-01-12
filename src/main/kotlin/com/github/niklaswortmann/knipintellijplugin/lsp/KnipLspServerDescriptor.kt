@@ -1,87 +1,27 @@
 package com.github.niklaswortmann.knipintellijplugin.lsp
 
-import com.github.niklaswortmann.knipintellijplugin.settings.KnipSettings
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.lang.typescript.lsp.JSFrameworkLspServerDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
 import org.eclipse.lsp4j.ConfigurationItem
-import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
-import org.eclipse.lsp4j.services.LanguageServer
-import java.util.concurrent.CompletableFuture
 
 /**
  * LSP Server Descriptor for the Knip language server.
- * Configures how the server is started and which files it supports.
+ * Extends JSFrameworkLspServerDescriptor to leverage the TypeScript/JavaScript
+ * framework infrastructure for package resolution via KnipLspServerActivationRule.
  */
-class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Knip") {
-
-    companion object {
-        private val LOG = Logger.getInstance(KnipLspServerDescriptor::class.java)
-        
-        // Custom Knip LSP request methods
-        const val REQUEST_START = "knip.start"
-        const val REQUEST_STOP = "knip.stop"
-        const val REQUEST_RESTART = "knip.restart"
-    }
-
-    override fun isSupportedFile(file: VirtualFile): Boolean {
-        return KnipLspServerSupportProvider.isSupportedFile(file)
-    }
-
-    override fun createCommandLine(): GeneralCommandLine {
-        val settings = KnipSettings.getInstance(project)
-
-        // Use custom node path from settings, or auto-detect
-        val nodePath = if (settings.nodePath.isNotBlank()) {
-            LOG.info("Using custom node path from settings: ${settings.nodePath}")
-            settings.nodePath
-        } else {
-            KnipNodeResolver.findNodePath()
-        }
-
-        // Use custom language server path from settings, or auto-detect
-        val languageServerPath = if (settings.languageServerPath.isNotBlank()) {
-            LOG.info("Using custom language server path from settings: ${settings.languageServerPath}")
-            settings.languageServerPath
-        } else {
-            KnipNodeResolver.findLanguageServerPath(project.basePath)
-        }
-
-        if (languageServerPath == null) {
-            LOG.warn("Language server path not found, using error command")
-            // Return a command that will fail with a helpful error message
-            return GeneralCommandLine(
-                nodePath,
-                "-e",
-                "console.error('Error: @knip/language-server package not found. Please install it globally with: npm install -g @knip/language-server'); process.exit(1);"
-            ).apply {
-                project.basePath?.let { withWorkDirectory(it) }
-            }
-        }
-
-        val commandLine = GeneralCommandLine().apply {
-            exePath = nodePath
-            addParameter(languageServerPath)
-
-            // Add server arguments from settings
-            val args = settings.serverArguments.split(" ")
-                .filter { it.isNotBlank() }
-            args.forEach { addParameter(it) }
-
-            // Set working directory to project base path
-            project.basePath?.let { withWorkDirectory(it) }
-        }
-
-        LOG.info("Starting Knip language server with command: ${commandLine.commandLineString}")
-        return commandLine
-    }
+internal class KnipLspServerDescriptor(project: Project) : JSFrameworkLspServerDescriptor(project, KnipLspServerActivationRule, "Knip") {
 
     /**
-     * Override to use our custom server interface that supports the knip.start request.
+     * Creates initialization options for the TypeScript SDK path.
      */
-    override val lsp4jServerClass: Class<out LanguageServer> = KnipLanguageServer::class.java
+    override fun createInitializationOptionsWithTS(targetPath: String): Any {
+        @Suppress("unused")
+        return object {
+            val typescript = object {
+                val tsdk = targetPath
+            }
+        }
+    }
 
     /**
      * Provides workspace configuration for the Knip language server.
@@ -152,21 +92,11 @@ class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor
             val enabled: Boolean = true
         }
     }
-}
 
-/**
- * Extended LanguageServer interface that includes Knip-specific custom requests.
- * The Knip language server requires a "knip.start" request to be sent after initialization
- * to start the session and begin publishing diagnostics.
- */
-interface KnipLanguageServer : LanguageServer {
-    
-    @JsonRequest("knip.start")
-    fun knipStart(): CompletableFuture<Any?>
-    
-    @JsonRequest("knip.stop")
-    fun knipStop(): CompletableFuture<Any?>
-    
-    @JsonRequest("knip.restart")
-    fun knipRestart(): CompletableFuture<Any?>
+    companion object {
+        // Custom Knip LSP command names (sent via workspace/executeCommand)
+        const val COMMAND_START = "knip.start"
+        const val COMMAND_STOP = "knip.stop"
+        const val COMMAND_RESTART = "knip.restart"
+    }
 }

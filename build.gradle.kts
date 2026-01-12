@@ -134,6 +134,61 @@ tasks {
     publishPlugin {
         dependsOn(patchChangelog)
     }
+
+    // Download and bundle @knip/language-server with the plugin
+    val downloadLanguageServer by registering(Exec::class) {
+        description = "Downloads @knip/language-server npm package"
+        group = "build"
+
+        val serverDir = layout.buildDirectory.dir("language-server").get().asFile
+        outputs.dir(serverDir)
+
+        // Only run if the directory doesn't exist or is empty
+        onlyIf { !serverDir.exists() || serverDir.listFiles()?.isEmpty() == true }
+
+        workingDir = layout.buildDirectory.get().asFile
+
+        doFirst {
+            serverDir.mkdirs()
+        }
+
+        commandLine("npm", "install", "--prefix", serverDir.absolutePath,
+            "--no-save", "--no-package-lock", "@knip/language-server@latest")
+    }
+
+    // Copy the language server to resources
+    val copyLanguageServer by registering(Copy::class) {
+        description = "Copies language server to plugin resources"
+        group = "build"
+
+        dependsOn(downloadLanguageServer)
+
+        from(layout.buildDirectory.dir("language-server/node_modules/@knip/language-server"))
+        into(layout.projectDirectory.dir("src/main/resources/language-server"))
+    }
+
+    processResources {
+        dependsOn(copyLanguageServer)
+    }
+
+    // Copy language server to sandbox for bundled mode
+    // PackageVersion.bundled() expects files at plugins/<pluginName>/<localPath>
+    // Also copy node_modules so dependencies like 'knip' are available
+    withType<org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask> {
+        dependsOn(copyLanguageServer)
+        // Copy the language server package
+        from(layout.projectDirectory.dir("src/main/resources/language-server")) {
+            into("${pluginName.get()}/language-server")
+        }
+        // Copy node_modules with all dependencies (knip, etc.)
+        from(layout.buildDirectory.dir("language-server/node_modules")) {
+            into("${pluginName.get()}/language-server/node_modules")
+        }
+    }
+
+    clean {
+        delete(layout.projectDirectory.dir("src/main/resources/language-server"))
+    }
 }
 
 intellijPlatformTesting {

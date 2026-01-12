@@ -158,3 +158,163 @@
     "NEW INSTRUCTION": "WHEN modifying server activation rules THEN add tests ensuring TS/JS files trigger LSP"
 }
 
+[2026-01-09 04:56] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "search wrong docs",
+    "MISSING STEPS": "update plugin dependencies, remove custom resolver, run build",
+    "BOTTLENECK": "API changes were implemented without verifying correct SDK/plugin dependencies.",
+    "PROJECT NOTE": "Add JavaScript/TypeScript plugin dependency and remove KnipNodeResolver.kt to avoid duplicate resolution.",
+    "NEW INSTRUCTION": "WHEN introducing new IntelliJ platform APIs THEN update plugin dependencies and run a build"
+}
+
+[2026-01-09 05:24] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "add progress UI,wait for server ready,send custom knip.start request",
+    "MISSING STEPS": "verify node interpreter,notify user on misconfiguration,fail fast on missing interpreter,add startup logging",
+    "BOTTLENECK": "Server startup fails because no Node.js interpreter is configured (Default not resolved).",
+    "PROJECT NOTE": "Ensure package entry point matches published build (likely dist/index.js, not src/index.js).",
+    "NEW INSTRUCTION": "WHEN NodeJsInterpreterManager returns null interpreter THEN show notification directing user to configure Node.js interpreter, then abort start"
+}
+
+[2026-01-09 08:33] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "re-open same files,repeat git show/cat for same targets",
+    "MISSING STEPS": "run build,run plugin,collect server logs,validate fix,add tests",
+    "BOTTLENECK": "Server startup mechanism change broke path resolution causing the server to exit before initialize.",
+    "PROJECT NOTE": "Original ProjectWideLspServerDescriptor with KnipNodeResolver worked; JSNodeLspServerDescriptor requires reliable bundled server and Node resolution.",
+    "NEW INSTRUCTION": "WHEN changing LSP server startup mechanism THEN run build and verify server starts successfully"
+}
+
+[2026-01-09 09:12] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "run tests",
+    "MISSING STEPS": "inspect API signature",
+    "BOTTLENECK": "Unclear constructor parameters for JSLspServerWidgetItem caused guesswork.",
+    "PROJECT NOTE": "Icons live under src/main/resources/icons and load via \"/icons/...\" with IconLoader.",
+    "NEW INSTRUCTION": "WHEN parameter mismatch error occurs for external API THEN locate class in Gradle caches and read signature"
+}
+
+[2026-01-09 09:34] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "implement icons,update widget icons,run tests",
+    "MISSING STEPS": "scan project,open KnipServices.kt,fix descriptor,refactor support provider,run build,add tests",
+    "BOTTLENECK": "Compilation fails due to mismatched descriptor/activation rule APIs and missing implementation.",
+    "PROJECT NOTE": "SUPPORTED_EXTENSIONS and SUPPORTED_FILE_NAMES are duplicated; centralize to avoid drift.",
+    "NEW INSTRUCTION": "WHEN compile errors reference LspServerDescriptor or activation rule THEN reconcile APIs and implement createLspServerDescriptor"
+}
+
+[2026-01-09 09:48] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "add support provider, update plugin.xml, add registry key, run build, implement progress hook, verify API usage",
+    "BOTTLENECK": "Refactoring proceeded without wiring SupportProvider/plugin.xml and aligning API types.",
+    "PROJECT NOTE": "Mirror Astro’s structure: create LspServerSupportProvider, declare registry key knip.language.server.default.version, register server support provider in plugin.xml, and keep the knip.start progress logic.",
+    "NEW INSTRUCTION": "WHEN adopting TypeScript LSP infrastructure for a server THEN create SupportProvider, plugin.xml entries, and registry key before refactoring code"
+}
+
+[2026-01-09 10:15] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "-",
+    "BOTTLENECK": "Language server bundled in JAR, not copied to sandbox filesystem.",
+    "PROJECT NOTE": "Use PrepareSandboxTask to copy language-server to plugins/<pluginName>/language-server for bundled mode.",
+    "NEW INSTRUCTION": "WHEN sandbox lacks language-server after prepareSandbox THEN copy language-server directory into sandbox plugins path"
+}
+
+[2026-01-09 10:17] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "bundle runtime deps,verify runtime deps,run in sandbox",
+    "BOTTLENECK": "Language server runtime dependency 'knip' is not bundled into the sandbox.",
+    "PROJECT NOTE": "Copy language-server node_modules (including knip) to plugins/knip-intellij-plugin/language-server or adjust imports to built dist paths.",
+    "NEW INSTRUCTION": "WHEN Node reports \"Cannot find package\" in language-server THEN copy its node_modules into sandbox"
+}
+
+[2026-01-09 10:22] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "verify changes with git diff,repeat file reopen without testing",
+    "MISSING STEPS": "run build,restart plugin,validate diagnostics in IDE,enable/inspect server logs",
+    "BOTTLENECK": "Verification relied on git for an untracked file instead of running and testing.",
+    "PROJECT NOTE": "language-server files appear untracked; ensure they are packaged and rebuild before testing.",
+    "NEW INSTRUCTION": "WHEN modifying language-server sources THEN rebuild plugin and relaunch IDE run configuration"
+}
+
+[2026-01-09 10:34] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "run tests,stash changes,restore stash",
+    "MISSING STEPS": "-",
+    "BOTTLENECK": "Unnecessary test runs and stash operations delayed the straightforward fix.",
+    "PROJECT NOTE": "Ensure plugin.xml fileType patterns include all common variants (e.g., knip.config.{js,ts,cjs,mjs}, knip.{js,ts}, knip.jsonc).",
+    "NEW INSTRUCTION": "WHEN investigating missing file icon THEN check plugin.xml fileType and icon resource before tests"
+}
+
+[2026-01-09 12:15] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "speculate startup flow",
+    "MISSING STEPS": "run plugin",
+    "BOTTLENECK": "Incorrect assumption about PackageVersion.bundled signature caused a compilation error detour.",
+    "PROJECT NOTE": "Use PackageVersion.bundled with the descriptor class generic, plugin directory name, and language-server path.",
+    "NEW INSTRUCTION": "WHEN changing package resolution to bundled THEN use correct bundled signature from similar plugins"
+}
+
+[2026-01-09 12:29] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "reopen file",
+    "MISSING STEPS": "verify diagnostics, run build, add tests, review diagnostics flow, update client config",
+    "BOTTLENECK": "No verification that diagnostics were published/received after capability change.",
+    "PROJECT NOTE": "-",
+    "NEW INSTRUCTION": "WHEN investigating missing diagnostics THEN inspect onInitialize for textDocumentSync and diagnosticProvider"
+}
+
+[2026-01-09 12:37] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "-",
+    "MISSING STEPS": "run build",
+    "BOTTLENECK": "Unsynchronized startup invocation in createLspServerDescriptor caused concurrent launches.",
+    "PROJECT NOTE": "Prefer a per-project service to hold startup state instead of a static map keyed by path.",
+    "NEW INSTRUCTION": "WHEN createLspServerDescriptor schedules background startup THEN guard with per-project inProgress flag and clear in finally"
+}
+
+[2026-01-09 12:42] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "run tests,check VCS status",
+    "MISSING STEPS": "run plugin,verify diagnostics",
+    "BOTTLENECK": "Server did not declare textDocumentSync in onInitialize.",
+    "PROJECT NOTE": "JetBrains JSFramework LSP shows diagnostics only if textDocumentSync is advertised.",
+    "NEW INSTRUCTION": "WHEN LSP diagnostics are not shown in editor THEN start IDE sandbox and verify server declares textDocumentSync capability"
+}
+
+[2026-01-12 09:28] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "run tests,git stash/pop,multiple compile",
+    "MISSING STEPS": "collect logs,verify node interpreter,check server path,inspect extension deprecation,validate activation rules,trace diagnostics handlers",
+    "BOTTLENECK": "No log-based validation of root cause before altering plugin.xml ordering.",
+    "PROJECT NOTE": "Deprecated JavaScript.languageServiceProvider and unresolved registry key in KnipServices.kt may affect behavior.",
+    "NEW INSTRUCTION": "WHEN stack trace references ESLint service THEN review extension priorities and activation rules before changing plugin.xml order"
+}
+
+[2026-01-12 09:31] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "open constants.js",
+    "MISSING STEPS": "run build,add tests",
+    "BOTTLENECK": "Client used executeCommand while server only handled custom requests",
+    "PROJECT NOTE": "Support both custom requests and workspace/executeCommand for VSCode and IntelliJ clients",
+    "NEW INSTRUCTION": "WHEN logs contain Unhandled method workspace/executeCommand THEN add executeCommandProvider and onExecuteCommand mapping"
+}
+
