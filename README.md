@@ -19,6 +19,9 @@ Knip helps you keep your codebase clean and maintainable by identifying dead cod
 **Features:**
 - Real-time diagnostics in the editor
 - Support for JavaScript, TypeScript, JSX, TSX, and JSON files
+- Knip icon for configuration files in project view
+- Progress indicator while analyzing project (server v1.1.0+)
+- LSP status widget with restart capability
 - Automatic language server lifecycle management
 - Configuration via knip.json or knip.ts
 <!-- Plugin description end -->
@@ -87,19 +90,21 @@ Once installed and configured:
 3. Unused code is highlighted in the editor with warnings
 4. View all issues in the **Problems** tool window
 
-### Restart Language Server
+### LSP Status Widget
 
-If you need to restart the language server:
-- Go to <kbd>Tools</kbd> > <kbd>Restart Knip Language Server</kbd>
-- Or use <kbd>Find Action</kbd> (Ctrl+Shift+A / Cmd+Shift+A) and search for "Restart Knip"
+The Knip language server status is shown in the IDE status bar (bottom right). Click on the Knip widget to:
+- View server status
+- Restart the language server
+- Access plugin settings
 
 ## Supported File Types
 
-- JavaScript (`.js`)
-- TypeScript (`.ts`)
+- JavaScript (`.js`, `.mjs`, `.cjs`)
+- TypeScript (`.ts`, `.mts`, `.cts`)
 - JSX (`.jsx`)
 - TSX (`.tsx`)
-- JSON (`.json`) - for `package.json` and `knip.json`
+- JSON (`.json`, `.jsonc`) - for `package.json`, `knip.json`, `knip.jsonc`
+- Knip config files (`knip.ts`, `knip.config.ts`, `knip.config.js`, etc.)
 
 ## Troubleshooting
 
@@ -123,7 +128,8 @@ The plugin auto-detects the language server in these locations:
 
 1. Ensure your project has a valid Knip configuration file
 2. Check that the file types are supported
-3. Try restarting the language server
+3. Try restarting the language server via the status bar widget
+4. Check if the language server version is logged in IDE logs
 
 ## Development
 

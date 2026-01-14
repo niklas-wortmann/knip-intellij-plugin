@@ -24,14 +24,9 @@
         <!-- Platform LSP API Registration -->
         <platform.lsp.serverSupportProvider
             implementation="com.github.niklaswortmann.knipintellijplugin.lsp.KnipLspServerSupportProvider"/>
+
+        <!-- Icon provider for Knip config files -->
+        <iconProvider implementation="com.github.niklaswortmann.knipintellijplugin.KnipFileIconProvider"/>
     </extensions>
 
-    <actions>
-        <action id="Knip.RestartServer"
-                class="com.github.niklaswortmann.knipintellijplugin.actions.RestartKnipServerAction"
-                text="Restart Knip Language Server"
-                description="Restart the Knip language server">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
-        </action>
-    </actions>
 </idea-plugin>

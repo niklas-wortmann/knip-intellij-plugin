@@ -3,9 +3,9 @@ package com.github.niklaswortmann.knipintellijplugin.lsp
 import com.github.niklaswortmann.knipintellijplugin.KnipBundle
 import com.github.niklaswortmann.knipintellijplugin.settings.KnipSettings
 import com.github.niklaswortmann.knipintellijplugin.settings.KnipSettingsConfigurable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.platform.lsp.api.LspServer
@@ -16,10 +16,13 @@ import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem
 import com.intellij.platform.util.progress.reportProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * LSP Server Support Provider for the Knip language server.
@@ -45,8 +48,8 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
         if (isSupportedFile(file)) {
             val descriptor = KnipLspServerDescriptor(project)
             serverStarter.ensureServerStarted(descriptor)
-            
-            // Send knip.start request after server is started with progress indicator
+
+            // Show progress indicator until module graph is built
             startKnipSessionWithProgress(project)
         }
     }
@@ -55,42 +58,149 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
         return LspServerWidgetItem(
             lspServer,
             currentFile,
+            KNIP_ICON,
             settingsPageClass = KnipSettingsConfigurable::class.java
         )
     }
     
     /**
-     * Starts the Knip session with a progress indicator in the IDE status bar.
+     * Shows a progress indicator while Knip analyzes the project.
      * Uses a managed CoroutineScope with SupervisorJob for proper lifecycle management.
-     * The scope is cancelled after the work completes to prevent memory leaks.
+     *
+     * Only one progress indicator is shown at a time per project. If a new progress session
+     * is started while one is already running (e.g., on server restart), the existing one
+     * is cancelled first.
+     *
+     * The progress indicator is only shown for language server version 1.1.0 and above,
+     * which supports the knip.moduleGraphBuilt notification. Older versions don't show
+     * a progress indicator.
      */
     @Suppress("UnstableApiUsage")
     private fun startKnipSessionWithProgress(project: Project) {
-        // Create a supervised scope that will be cancelled after work completes
+        val projectPath = project.basePath ?: return
+
+        // Cancel any existing progress job for this project
+        activeProgressJobs[projectPath]?.let { existingJob ->
+            LOG.info("Cancelling existing progress indicator for project: $projectPath")
+            existingJob.cancel()
+        }
+
+        // Reset the future for a fresh start
+        KnipLspServerDescriptor.resetModuleGraphBuiltFuture(projectPath)
+
+        // Create a supervised scope for the progress job
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        scope.launch {
+        val job = scope.launch {
             try {
+                // First, wait for server to be ready and check version
+                waitForServerReady(project)
+
+                val serverVersion = getServerVersion(project)
+                LOG.info("Knip language server version: ${serverVersion ?: "unknown"}")
+
+                // Send knip.start to trigger analysis (required for all versions)
+                sendKnipStartRequest(project)
+
+                // Only show progress bar for version 1.1.0 and above
+                if (serverVersion == null || !isVersionAtLeast(serverVersion, MIN_VERSION_FOR_PROGRESS)) {
+                    LOG.info("Skipping progress indicator: server version $serverVersion does not support moduleGraphBuilt notification (requires $MIN_VERSION_FOR_PROGRESS+)")
+                    return@launch
+                }
+
                 withBackgroundProgress(project, KnipBundle.message("progressTitle"), cancellable = true) {
                     LOG.info("Knip startup progress indicator started")
-                    
-                    reportProgress(2) { reporter ->
-                        // Step 1: Wait for server to be fully initialized
-                        reporter.itemStep(KnipBundle.message("progressStartingServer")) {
-                            waitForServerReady(project)
-                        }
-                        
-                        // Step 2: Send knip.start request to initialize session
-                        reporter.itemStep(KnipBundle.message("progressInitializingSession")) {
-                            sendKnipStartRequest(project)
+
+                    reportProgress(1) { reporter ->
+                        // Wait for module graph to be built (knip.moduleGraphBuilt notification)
+                        reporter.itemStep(KnipBundle.message("progressBuildingModuleGraph")) {
+                            waitForModuleGraphBuilt(projectPath)
                         }
                     }
-                    
+
                     LOG.info("Knip startup progress indicator finished")
                 }
             } finally {
-                // Cancel the scope to clean up resources
-                scope.cancel()
+                // Clean up: remove this job from the map when done
+                activeProgressJobs.remove(projectPath, scope.coroutineContext[Job])
             }
+        }
+
+        // Track the new job
+        activeProgressJobs[projectPath] = job
+    }
+
+    /**
+     * Gets the language server version from the LSP server's initialization result.
+     * Returns null if the version cannot be determined.
+     */
+    private fun getServerVersion(project: Project): String? {
+        val lspServerManager = LspServerManager.getInstance(project)
+        val servers = lspServerManager.getServersForProvider(KnipLspServerSupportProvider::class.java)
+
+        for (server in servers) {
+            if (server.state == LspServerState.Running) {
+                val initResult = server.initializeResult
+                if (initResult == null) {
+                    LOG.warn("Server is running but initializeResult is null")
+                    return null
+                }
+                val serverInfo = initResult.serverInfo
+                LOG.info("Server initializeResult.serverInfo: $serverInfo")
+                if (serverInfo == null) {
+                    LOG.warn("Server initializeResult has no serverInfo - language server may not report version")
+                    return null
+                }
+                return serverInfo.version
+            }
+        }
+        LOG.warn("No running server found when checking version")
+        return null
+    }
+
+    /**
+     * Sends the knip.start request to trigger analysis.
+     * This is required for all server versions to begin analyzing the project.
+     */
+    private suspend fun sendKnipStartRequest(project: Project) {
+        try {
+            val lspServerManager = LspServerManager.getInstance(project)
+            val servers = lspServerManager.getServersForProvider(KnipLspServerSupportProvider::class.java)
+
+            for (lspServer in servers) {
+                if (lspServer.state == LspServerState.Running) {
+                    LOG.info("Sending knip.start request to trigger analysis")
+                    lspServer.sendRequest<Any?> { server ->
+                        if (server is KnipLanguageServer) {
+                            server.knipStart()
+                        } else {
+                            LOG.warn("Server is not a KnipLanguageServer instance")
+                            java.util.concurrent.CompletableFuture.completedFuture(null)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            LOG.warn("Error sending knip.start request: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Waits for the knip.moduleGraphBuilt notification from the language server.
+     * This indicates that Knip has finished analyzing the project.
+     * Times out after 5 minutes to prevent indefinite waiting.
+     */
+    private suspend fun waitForModuleGraphBuilt(projectPath: String) {
+        val future = KnipLspServerDescriptor.getModuleGraphBuiltFuture(projectPath)
+        val timeoutMs = 5 * 60 * 1000L // 5 minutes
+
+        val result = withTimeoutOrNull(timeoutMs) {
+            future.await()
+        }
+
+        if (result == null) {
+            LOG.warn("Timeout waiting for knip.moduleGraphBuilt notification after ${timeoutMs}ms")
+        } else {
+            LOG.info("Module graph built successfully")
         }
     }
     
@@ -123,41 +233,44 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
         
         LOG.warn("Timeout waiting for Knip LSP server to be ready after ${maxWaitMs}ms")
     }
-    
-    /**
-     * Sends the knip.start request to the language server.
-     * This is required to initialize the Knip session and start publishing diagnostics.
-     */
-    private suspend fun sendKnipStartRequest(project: Project) {
-        try {
-            val lspServerManager = LspServerManager.getInstance(project)
-            val servers = lspServerManager.getServersForProvider(KnipLspServerSupportProvider::class.java)
-            
-            for (lspServer in servers) {
-                // Use sendRequest to send custom request to the server
-                LOG.info("Sending knip.start request to initialize Knip session")
-                try {
-                    lspServer.sendRequest<Any?> { server ->
-                        if (server is KnipLanguageServer) {
-                            server.knipStart()
-                        } else {
-                            LOG.warn("Server is not a KnipLanguageServer instance")
-                            java.util.concurrent.CompletableFuture.completedFuture(null)
-                        }
-                    }
-                    LOG.info("Knip session started successfully")
-                } catch (e: Exception) {
-                    LOG.warn("Failed to start Knip session: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            LOG.warn("Error sending knip.start request: ${e.message}", e)
-        }
-    }
 
     companion object {
         private val LOG = Logger.getInstance(KnipLspServerSupportProvider::class.java)
-        
+        private val KNIP_ICON = IconLoader.getIcon("/icons/knip_16.png", KnipLspServerSupportProvider::class.java)
+
+        /**
+         * Minimum language server version that supports the knip.moduleGraphBuilt notification.
+         */
+        private const val MIN_VERSION_FOR_PROGRESS = "1.1.0"
+
+        /**
+         * Map to track active progress jobs per project path.
+         * Ensures only one progress indicator is shown at a time per project.
+         */
+        private val activeProgressJobs = ConcurrentHashMap<String, Job>()
+
+        /**
+         * Compares two semantic version strings.
+         * Returns true if [version] is at least [minVersion].
+         */
+        internal fun isVersionAtLeast(version: String, minVersion: String): Boolean {
+            try {
+                val versionParts = version.split(".").map { it.toIntOrNull() ?: 0 }
+                val minParts = minVersion.split(".").map { it.toIntOrNull() ?: 0 }
+
+                for (i in 0 until maxOf(versionParts.size, minParts.size)) {
+                    val v = versionParts.getOrElse(i) { 0 }
+                    val m = minParts.getOrElse(i) { 0 }
+                    if (v > m) return true
+                    if (v < m) return false
+                }
+                return true // versions are equal
+            } catch (e: Exception) {
+                LOG.warn("Failed to parse version string: $version", e)
+                return false
+            }
+        }
+
         /**
          * Supported file extensions for the Knip language server.
          */
@@ -200,16 +313,6 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
             }
 
             return false
-        }
-
-        /**
-         * Restarts the Knip language server asynchronously.
-         */
-        fun restartServerAsync(project: Project) {
-            ApplicationManager.getApplication().invokeLater({
-                LspServerManager.getInstance(project)
-                    .stopAndRestartIfNeeded(KnipLspServerSupportProvider::class.java)
-            }, project.disposed)
         }
     }
 }

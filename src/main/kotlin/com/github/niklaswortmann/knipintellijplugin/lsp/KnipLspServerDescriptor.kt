@@ -5,11 +5,15 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.platform.lsp.api.Lsp4jClient
+import com.intellij.platform.lsp.api.LspServerNotificationsHandler
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
 import org.eclipse.lsp4j.ConfigurationItem
+import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.LanguageServer
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * LSP Server Descriptor for the Knip language server.
@@ -19,11 +23,40 @@ class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor
 
     companion object {
         private val LOG = Logger.getInstance(KnipLspServerDescriptor::class.java)
-        
-        // Custom Knip LSP request methods
-        const val REQUEST_START = "knip.start"
-        const val REQUEST_STOP = "knip.stop"
-        const val REQUEST_RESTART = "knip.restart"
+
+        // Map to track module graph completion per project
+        private val moduleGraphBuiltFutures = ConcurrentHashMap<String, CompletableFuture<Unit>>()
+
+        /**
+         * Gets or creates a CompletableFuture that completes when knip.moduleGraphBuilt is received.
+         */
+        fun getModuleGraphBuiltFuture(projectPath: String): CompletableFuture<Unit> {
+            return moduleGraphBuiltFutures.computeIfAbsent(projectPath) {
+                CompletableFuture()
+            }
+        }
+
+        /**
+         * Resets the module graph built future for a project (e.g., on server restart).
+         */
+        fun resetModuleGraphBuiltFuture(projectPath: String) {
+            moduleGraphBuiltFutures.remove(projectPath)
+        }
+
+        /**
+         * Called when the knip.moduleGraphBuilt notification is received.
+         */
+        internal fun onModuleGraphBuilt(projectPath: String) {
+            LOG.info("Received knip.moduleGraphBuilt notification for project: $projectPath")
+            val future = moduleGraphBuiltFutures[projectPath]
+            if (future != null && !future.isDone) {
+                future.complete(Unit)
+            }
+        }
+    }
+
+    override fun createLsp4jClient(handler: LspServerNotificationsHandler): Lsp4jClient {
+        return KnipLsp4jClient(handler, project.basePath ?: "")
     }
 
     override fun isSupportedFile(file: VirtualFile): Boolean {
@@ -46,7 +79,11 @@ class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor
             LOG.info("Using custom language server path from settings: ${settings.languageServerPath}")
             settings.languageServerPath
         } else {
-            KnipNodeResolver.findLanguageServerPath(project.basePath)
+            val detectedPath = KnipNodeResolver.findLanguageServerPath(project.basePath)
+            if (detectedPath != null) {
+                LOG.info("Found @knip/language-server at: $detectedPath")
+            }
+            detectedPath
         }
 
         if (languageServerPath == null) {
@@ -156,17 +193,30 @@ class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor
 
 /**
  * Extended LanguageServer interface that includes Knip-specific custom requests.
- * The Knip language server requires a "knip.start" request to be sent after initialization
- * to start the session and begin publishing diagnostics.
+ * The Knip language server uses "knip.start" to trigger analysis.
  */
 interface KnipLanguageServer : LanguageServer {
-    
+
     @JsonRequest("knip.start")
     fun knipStart(): CompletableFuture<Any?>
-    
-    @JsonRequest("knip.stop")
-    fun knipStop(): CompletableFuture<Any?>
-    
-    @JsonRequest("knip.restart")
-    fun knipRestart(): CompletableFuture<Any?>
+}
+
+/**
+ * Custom LSP4J client that handles Knip-specific notifications.
+ * Extends the base Lsp4jClient to receive the knip.moduleGraphBuilt notification.
+ */
+class KnipLsp4jClient(
+    handler: LspServerNotificationsHandler,
+    private val projectPath: String
+) : Lsp4jClient(handler) {
+
+    /**
+     * Handles the knip.moduleGraphBuilt notification from the language server.
+     * This notification is sent when Knip has finished building the module graph
+     * and is ready to provide diagnostics.
+     */
+    @JsonNotification("knip.moduleGraphBuilt")
+    fun moduleGraphBuilt() {
+        KnipLspServerDescriptor.onModuleGraphBuilt(projectPath)
+    }
 }

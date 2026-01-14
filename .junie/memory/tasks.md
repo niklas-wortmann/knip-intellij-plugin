@@ -158,3 +158,13 @@
     "NEW INSTRUCTION": "WHEN modifying server activation rules THEN add tests ensuring TS/JS files trigger LSP"
 }
 
+[2026-01-14 03:14] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "inspect file type",
+    "MISSING STEPS": "-",
+    "BOTTLENECK": "Conflicting cached IntelliJ localPlatformArtifacts caused dependency resolution failure.",
+    "PROJECT NOTE": "If this recurs, upgrade the Gradle IntelliJ Plugin to the latest version.",
+    "NEW INSTRUCTION": "WHEN FileAlreadyExistsException under .intellijPlatform/localPlatformArtifacts THEN delete that directory and rerun failing Gradle task"
+}
+

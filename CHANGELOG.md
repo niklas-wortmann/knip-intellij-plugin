@@ -4,14 +4,29 @@
 
 ## [Unreleased]
 
+### Added
+- Knip icon displayed for configuration files in project view and editor tabs
+- Progress indicator while Knip analyzes the project (requires language server v1.1.0+)
+- LSP status bar widget with Knip icon showing server status
+- Support for `knip.moduleGraphBuilt` notification from language server v1.1.0+
+- Version detection and logging for the language server
+- Additional file extension support: `.mjs`, `.cjs`, `.mts`, `.cts`, `.jsonc`
+
 ### Changed
 - Migrated from LSP4IJ (RedHat) to JetBrains Platform LSP API for native LSP support
+- Restart functionality moved from Tools menu to LSP status bar widget
 - Plugin now requires IntelliJ IDEA Ultimate or other commercial JetBrains IDEs with LSP support
+
+### Removed
+- "Restart Knip Language Server" action from Tools menu (use status bar widget instead)
 
 ### Technical
 - Replaced `com.redhat.devtools.lsp4ij` dependency with `com.intellij.modules.ultimate`
 - New implementation using `LspServerSupportProvider` and `ProjectWideLspServerDescriptor`
 - Custom `knip.start` request handling via coroutines and `LspServer.sendRequest`
+- Custom `Lsp4jClient` implementation to handle `knip.moduleGraphBuilt` notification
+- Added `KnipFileIconProvider` for config file icons
+- Semantic version comparison for feature detection
 
 ## [0.0.1] - 2026-01-06
 ### Added
@@ -34,9 +49,8 @@
 - Plugin settings page (Settings > Tools > Knip):
   - Enable/disable toggle
   - Custom Node.js path
-  - Custom npx path
+  - Custom language server path
   - Server arguments configuration
-- "Restart Knip Language Server" action in Tools menu
 - Automatic language server lifecycle management
 - User notifications for server status and errors
 
