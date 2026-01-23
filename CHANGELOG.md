@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-01-23
+
 ### Added
 - Knip icon displayed for configuration files in project view and editor tabs
 - Progress indicator while Knip analyzes the project (requires language server v1.1.0+)
@@ -11,11 +13,16 @@
 - Support for `knip.moduleGraphBuilt` notification from language server v1.1.0+
 - Version detection and logging for the language server
 - Additional file extension support: `.mjs`, `.cjs`, `.mts`, `.cts`, `.jsonc`
+- File change listener to send `didChangeWatchedFiles` notifications to the language server
 
 ### Changed
 - Migrated from LSP4IJ (RedHat) to JetBrains Platform LSP API for native LSP support
 - Restart functionality moved from Tools menu to LSP status bar widget
 - Plugin now requires IntelliJ IDEA Ultimate or other commercial JetBrains IDEs with LSP support
+
+### Fixed
+- Diagnostics not appearing in IntelliJ 2025.2+ due to pull diagnostics being enabled by default
+  - Added LSP customization to disable pull diagnostics and use only push-based diagnostics
 
 ### Removed
 - "Restart Knip Language Server" action from Tools menu (use status bar widget instead)
@@ -26,6 +33,8 @@
 - Custom `knip.start` request handling via coroutines and `LspServer.sendRequest`
 - Custom `Lsp4jClient` implementation to handle `knip.moduleGraphBuilt` notification
 - Added `KnipFileIconProvider` for config file icons
+- Added `KnipLspCustomization` and `KnipDiagnosticsCustomizer` for LSP behavior customization
+- Added `KnipFileChangeListener` for workspace file change notifications
 - Semantic version comparison for feature detection
 
 ## [0.0.1] - 2026-01-06

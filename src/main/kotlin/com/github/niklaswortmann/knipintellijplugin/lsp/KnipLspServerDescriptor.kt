@@ -8,6 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.lsp.api.Lsp4jClient
 import com.intellij.platform.lsp.api.LspServerNotificationsHandler
 import com.intellij.platform.lsp.api.ProjectWideLspServerDescriptor
+import com.intellij.platform.lsp.api.customization.LspCustomization
+import com.intellij.platform.lsp.api.customization.LspDiagnosticsSupport
 import org.eclipse.lsp4j.ConfigurationItem
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
@@ -121,6 +123,19 @@ class KnipLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor
     override val lsp4jServerClass: Class<out LanguageServer> = KnipLanguageServer::class.java
 
     /**
+     * Customize LSP behavior for the Knip language server.
+     *
+     * The Knip language server uses push-based diagnostics (textDocument/publishDiagnostics)
+     * and does not support pull diagnostics (textDocument/diagnostic).
+     *
+     * IntelliJ 2025.2+ enables pull diagnostics by default, which can cause the server
+     * to not send push diagnostics if it sees the diagnostic capability.
+     * We disable pull diagnostics by returning false from shouldAskServerForDiagnostics
+     * to ensure only push diagnostics are used.
+     */
+    override val lspCustomization: LspCustomization = KnipLspCustomization()
+
+    /**
      * Provides workspace configuration for the Knip language server.
      * The server requests configuration via workspace/configuration with section 'knip'.
      */
@@ -219,4 +234,21 @@ class KnipLsp4jClient(
     fun moduleGraphBuilt() {
         KnipLspServerDescriptor.onModuleGraphBuilt(projectPath)
     }
+}
+
+/**
+ * Custom LSP customization for Knip that disables pull diagnostics.
+ * The Knip language server only supports push-based diagnostics.
+ */
+private class KnipLspCustomization : LspCustomization() {
+    override val diagnosticsCustomizer = KnipDiagnosticsCustomizer()
+}
+
+/**
+ * Custom diagnostics customizer that disables pull diagnostics.
+ * Returns false for shouldAskServerForDiagnostics to prevent IntelliJ
+ * from sending textDocument/diagnostic requests.
+ */
+private class KnipDiagnosticsCustomizer : LspDiagnosticsSupport() {
+    override fun shouldAskServerForDiagnostics(file: VirtualFile): Boolean = false
 }

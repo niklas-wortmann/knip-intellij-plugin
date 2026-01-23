@@ -49,6 +49,10 @@ class KnipLspServerSupportProvider : LspServerSupportProvider {
             val descriptor = KnipLspServerDescriptor(project)
             serverStarter.ensureServerStarted(descriptor)
 
+            // Register file change listener to send didChangeWatchedFiles notifications
+            // This is a workaround for IntelliJ not automatically sending these notifications
+            KnipFileChangeListener.register(project)
+
             // Show progress indicator until module graph is built
             startKnipSessionWithProgress(project)
         }
