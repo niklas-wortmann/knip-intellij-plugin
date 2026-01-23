@@ -1,8 +1,8 @@
 # Knip IntelliJ Plugin
 
 ![Build](https://github.com/niklas-wortmann/knip-intellij-plugin/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/29765.svg)](https://plugins.jetbrains.com/plugin/29765)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/29765.svg)](https://plugins.jetbrains.com/plugin/29765)
 
 <!-- Plugin description -->
 **Knip** - Find unused files, dependencies and exports in your JavaScript/TypeScript projects.

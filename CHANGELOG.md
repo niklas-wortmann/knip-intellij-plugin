@@ -7,6 +7,7 @@
 ## [0.0.2] - 2026-01-23
 
 ### Added
+
 - Knip icon displayed for configuration files in project view and editor tabs
 - Progress indicator while Knip analyzes the project (requires language server v1.1.0+)
 - LSP status bar widget with Knip icon showing server status
@@ -16,18 +17,22 @@
 - File change listener to send `didChangeWatchedFiles` notifications to the language server
 
 ### Changed
+
 - Migrated from LSP4IJ (RedHat) to JetBrains Platform LSP API for native LSP support
 - Restart functionality moved from Tools menu to LSP status bar widget
 - Plugin now requires IntelliJ IDEA Ultimate or other commercial JetBrains IDEs with LSP support
 
 ### Fixed
+
 - Diagnostics not appearing in IntelliJ 2025.2+ due to pull diagnostics being enabled by default
   - Added LSP customization to disable pull diagnostics and use only push-based diagnostics
 
 ### Removed
+
 - "Restart Knip Language Server" action from Tools menu (use status bar widget instead)
 
 ### Technical
+
 - Replaced `com.redhat.devtools.lsp4ij` dependency with `com.intellij.modules.ultimate`
 - New implementation using `LspServerSupportProvider` and `ProjectWideLspServerDescriptor`
 - Custom `knip.start` request handling via coroutines and `LspServer.sendRequest`
@@ -38,7 +43,9 @@
 - Semantic version comparison for feature detection
 
 ## [0.0.1] - 2026-01-06
+
 ### Added
+
 - Initial release of Knip IntelliJ Plugin
 - Integration with [@knip/language-server](https://www.npmjs.com/package/@knip/language-server) via LSP4IJ
 - Real-time diagnostics for unused code detection:
@@ -64,6 +71,11 @@
 - User notifications for server status and errors
 
 ### Technical
+
 - Built on IntelliJ Platform Plugin Template
 - Uses LSP4IJ for Language Server Protocol support
 - Supports IntelliJ IDEA 2025.2+ and compatible JetBrains IDEs
+
+[Unreleased]: https://github.com/niklas-wortmann/knip-intellij-plugin/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/niklas-wortmann/knip-intellij-plugin/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/niklas-wortmann/knip-intellij-plugin/commits/v0.0.1

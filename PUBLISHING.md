@@ -110,7 +110,7 @@ For the first publication:
 After the plugin is approved:
 
 1. Update `MARKETPLACE_ID` in README badges with your plugin ID
-2. The plugin ID can be found in the URL: `https://plugins.jetbrains.com/plugin/XXXXX-knip`
+2. The plugin ID can be found in the URL: `https://plugins.jetbrains.com/plugin/29765-knip`
 
 ## Version Guidelines
 
